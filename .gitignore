@@ -1,0 +1,4 @@
+*.mdfy
+*.spv
+*.o
+/main
