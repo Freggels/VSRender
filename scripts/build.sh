@@ -4,6 +4,7 @@ LIBS="-lvulkan -lvulkan_radeon -lglfw -Iinclude"
 OUTPUT_FILE="main"
 
 build() {
+	mkdir ./binary > /dev/null
 	printf "[ BUILD STAGE ]\n"
 	printf "[compiling shader.vert]..."
 	if [ "$(cat shaders/.shader.vert.mdfy)" != "$(stat -c "%Y" shaders/shader.vert)" ]; then
