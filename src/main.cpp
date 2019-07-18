@@ -86,22 +86,57 @@ Object3D test_object_3 = {
 	}
 };
 
-Object3D plane = {
-	"Plane",
+Object3D plane_1 = {
+	"Plane 1",
 	{
-		{{ -2.0f, -2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-		{{  2.0f, -2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-		{{  2.0f,  2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
-		{{ -2.0f,  2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
+		{{ -2.0f, -2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{  2.0f, -2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{  2.0f,  2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+		{{ -2.0f,  2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 	},
 	{
 		0, 1, 2, 2, 3, 0
+	},
+	{
+		{0.0f, 0.0f, 1.0f, 1.0f}
+	}
+};
+
+Object3D plane_2 = {
+	"Plane 2",
+	{
+		{{ -2.0f, -2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{  2.0f, -2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{  2.0f,  2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+		{{ -2.0f,  2.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+	},
+	{
+		0, 1, 2, 2, 3, 0
+	},
+	{
+		{0.0f, 0.0f, 2.0f, 1.0f}
+	}
+};
+
+Object3D floor_1 = {
+	"Plane 2",
+	{
+		{{ -10.0f, -10.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{  10.0f, -10.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{  10.0f,  10.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+		{{ -10.0f,  10.0f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+	},
+	{
+		0, 1, 2, 2, 3, 0
+	},
+	{
+		{0.0f, 0.0f, 0.0f, 1.0f}
 	}
 };
 
 int main(void) {
 	VRender renderObj;
-	test_object_1.script_function = [](VRender *render, Object3D *obj) {
+	std::function<void(VRender*, Object3D*)> script_function = [](VRender *render, Object3D *obj) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(
@@ -122,12 +157,28 @@ int main(void) {
 		std::cout << obj->name << " : { " << obj->ubo.position.x << " : " << obj->ubo.position.y << " : " << obj->ubo.position.z << " }" << std::endl;
 		//obj->ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(-45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	};
+	/*plane_1.script_function = script_function;
+	plane_2.script_function = script_function;*/
+	renderObj.script_function = [](VRender *render) {
+		if (glfwGetKey(render->getWindow(), GLFW_KEY_W) == GLFW_PRESS) {
+			render->subo.camera_position += glm::vec4(0.0f, 0.01f, 0.0f, 0.0f);
+		}
+		if (glfwGetKey(render->getWindow(), GLFW_KEY_S) == GLFW_PRESS) {
+			render->subo.camera_position += glm::vec4(0.0f, -0.01f, 0.0f, 0.0f);
+		}
+		if (glfwGetKey(render->getWindow(), GLFW_KEY_A) == GLFW_PRESS) {
+			render->subo.camera_position += glm::vec4(-0.01f, 0.0f, 0.0f, 0.0f);
+		}
+		if (glfwGetKey(render->getWindow(), GLFW_KEY_D) == GLFW_PRESS) {
+			render->subo.camera_position += glm::vec4(0.01f, 0.0f, 0.0f, 0.0f);
+		}
+	};
 	try {
 		renderObj.init();
-		renderObj.pushObject(plane);
-		renderObj.pushObject(test_object_1);
+		renderObj.pushObject(floor_1);
+		/*renderObj.pushObject(test_object_1);
 		renderObj.pushObject(test_object_2);
-		renderObj.pushObject(test_object_3);
+		renderObj.pushObject(test_object_3);*/
 		renderObj.startRender();
 		renderObj.destroy();
 	} catch (const std::exception& e) {

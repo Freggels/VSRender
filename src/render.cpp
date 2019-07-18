@@ -157,6 +157,21 @@ void VRender::createObjectDescriptorSets(Object3D &obj3d) {
 	}
 }
 
+void VRender::executeScripts() {
+	execute_script();
+	for (auto &obj : objects) {
+		obj.execute_script(this);
+	}
+}
+
+
+
+void VRender::execute_script() {
+	if (script_function != nullptr) {
+		script_function(this);
+	}
+}
+
 void VRender::createSyncObjects() {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -199,6 +214,7 @@ void VRender::recreateSwapChain() {
 
 void VRender::renderFrame() {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+	executeScripts();
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(
 		device,
@@ -437,7 +453,7 @@ void VRender::createIndexBuffer() {
 }
 
 void VRender::createSceneUniformBuffers() {
-	subo.view = glm::lookAt(glm::vec3(0.0f, -2.0f, 1.5f) * glm::vec3(2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	subo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 1.7f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
 	subo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
 	subo.proj[1][1] *= -1;
 	subo.light_point = light_point;
@@ -517,7 +533,6 @@ void VRender::updateUniformBuffer(uint32_t currentImage) {
 		vkUnmapMemory(device, obj.ubufmem[currentImage]);
 	}*/
 	for (auto &obj : objects) {
-		obj.execute_script(this);
 		vkMapMemory(device, obj.ubufmem[currentImage], 0, sizeof(obj.ubo), 0, &data);
 		memcpy(data, &obj.ubo, sizeof(obj.ubo));
 		vkUnmapMemory(device, obj.ubufmem[currentImage]);

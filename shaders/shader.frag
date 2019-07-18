@@ -3,19 +3,20 @@
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
-/*layout(location = 2) in vec3 vfNormal;
+layout(location = 2) in vec3 vfNormal;
 layout(location = 3) in vec3 vfPosition;
 
 layout(binding = 0) uniform SceneUBO {
 	mat4 view;
 	mat4 proj;
+	vec4 camera_position;
 	vec4 light_point;
 } subo;
 
 layout(binding = 2) uniform ObjectUBO {
 	vec4 oPosition;
 	mat4 model;
-} oubo;*/
+} oubo;
 
 layout(location = 0) out vec4 outColor;
 layout(binding = 1) uniform sampler2D texSampler;
@@ -35,12 +36,15 @@ void main() {
 	if (tmp_pos.xyz == vec3(0.0)) {
 		tmp_pos = vec4(1.0);
 	}*/
-	/*vec3 diffPosLightN = normalize(vfPosition - subo.light_point.xyz);
-	vec3 diffuseC = vec3(1.0);
-	float diffuseP = clamp(dot(diffPosLightN, vfNormal), 0, 1);
-	vec3 diffuse = diffuseC * diffuseP;
-	vec4 ambient = vec4(0.1);*/
+	vec3 diffuse = vec3(0.0);
+	if (subo.light_point.z > vfPosition.z) {
+		vec3 diffPosLightN = normalize(subo.light_point.xyz - vfPosition);
+		vec3 diffuseC = vec3(0.5);
+		float diffuseP = clamp(dot(diffPosLightN, vfNormal), 0, 1);
+		diffuse = diffuseC * diffuseP;
+	}
+	vec4 ambient = vec4(0.1);
 	outColor =
-		texture(texSampler, fragTexCoord)/*
-		* (ambient + vec4(diffuse, 1.0))*/;
+		texture(texSampler, fragTexCoord)
+		* (ambient + vec4(diffuse, 1.0));
 }

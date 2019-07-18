@@ -58,6 +58,7 @@ struct Vertex {
 struct Scene_UBO {
 	alignas(16) glm::mat4 view = glm::mat4(1.0f);
 	alignas(16) glm::mat4 proj = glm::mat4(1.0f);
+	alignas(16) glm::vec4 camera_position = glm::vec4(0.0f, 0.0f, 1.7f, 0.0f);
 	alignas(16) glm::vec4 light_point = glm::vec4(1.0f);
 };
 
@@ -99,6 +100,8 @@ class VRender {
 		void framebufferResizedSet(bool new_state);
 		void pushObject(Object3D obj3d);
 		GLFWwindow *getWindow();
+		Scene_UBO subo = {};
+		std::function<void(VRender*)> script_function = nullptr;
 	private:
 		GLFWwindow* window;
 		VkInstance instance;
@@ -135,7 +138,6 @@ class VRender {
 		VkSampler textureSampler;/*
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 		std::vector<VkBuffer> uniformBuffers;*/
-		Scene_UBO subo = {};
 		std::vector<VkDeviceMemory> sceneUniformBuffersMemory;
 		std::vector<VkBuffer> sceneUniformBuffers;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -146,7 +148,7 @@ class VRender {
 		bool framebufferResized = false;
 		std::vector<Object3D> objects;
 		std::map<std::string, uint32_t> objectIDs;
-		glm::vec4 light_point = glm::vec4(0.0f, 2.0f, 1.7f, 0.0f);
+		glm::vec4 light_point = glm::vec4(0.0f, 0.0f, 2.0f, 0.0f);
 		// Init
 		void renderFrame();
 		void prepareWindow();
@@ -174,6 +176,8 @@ class VRender {
 		//void createDescriptorSets();
 		void createSyncObjects();
 		void recreateSwapChain();
+		void executeScripts();
+		void execute_script();
 		// Tools
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);

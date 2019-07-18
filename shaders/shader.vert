@@ -3,6 +3,7 @@
 layout(binding = 0) uniform SceneUBO {
 	mat4 view;
 	mat4 proj;
+	vec4 camera_position;
 	vec4 light_point;
 } subo;
 
@@ -23,9 +24,9 @@ layout(location = 3) out vec3 vfPosition;
 
 
 void main() {
-	gl_Position = subo.proj * subo.view * ((oubo.model * vec4(vPosition, 1.0)) + oubo.oPosition);
+	gl_Position = subo.proj * subo.view * ((oubo.model * vec4(vPosition, 1.0)) + oubo.oPosition - subo.camera_position);
 	fragColor = vColor;
 	fragTexCoord = vTexturePosition;
-	/*vfNormal = ((mat3(oubo.model) * vNormal) + oubo.oPosition.xyz);
-	vfPosition = vPosition;*/
+	vfNormal = ((mat3(oubo.model) * vNormal) + oubo.oPosition.xyz);
+	vfPosition = vPosition;
 }
