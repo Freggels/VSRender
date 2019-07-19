@@ -454,7 +454,7 @@ void VRender::createIndexBuffer() {
 
 void VRender::createSceneUniformBuffers() {
 	subo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 1.7f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
-	subo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
+	subo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
 	subo.proj[1][1] *= -1;
 	subo.light_point = light_point;
 	VkDeviceSize bufferSize = sizeof(Scene_UBO);

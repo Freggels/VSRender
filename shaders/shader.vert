@@ -24,7 +24,7 @@ layout(location = 3) out vec3 vfPosition;
 
 
 void main() {
-	gl_Position = subo.proj * subo.view * ((oubo.model * vec4(vPosition, 1.0)) + oubo.oPosition - subo.camera_position);
+	gl_Position = subo.proj * subo.view * ((oubo.model * vec4(vPosition, 1.0)) + oubo.oPosition);
 	fragColor = vColor;
 	fragTexCoord = vTexturePosition;
 	vfNormal = ((mat3(oubo.model) * vNormal) + oubo.oPosition.xyz);

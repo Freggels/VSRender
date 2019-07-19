@@ -21,7 +21,7 @@ const std::vector<const char *> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const int WIDTH = 800, HEIGHT = 600;
+const int WIDTH = 1024, HEIGHT = 768;
 const char APPLICATION_NAME[] = "Vulkan Render";
 const std::string SHADER_PATH = "binary/";
 #endif

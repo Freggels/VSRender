@@ -58,7 +58,7 @@ struct Vertex {
 struct Scene_UBO {
 	alignas(16) glm::mat4 view = glm::mat4(1.0f);
 	alignas(16) glm::mat4 proj = glm::mat4(1.0f);
-	alignas(16) glm::vec4 camera_position = glm::vec4(0.0f, 0.0f, 1.7f, 0.0f);
+	alignas(16) glm::vec4 camera_position = glm::vec4(0.0f, -4.0f, 1.5f, 0.0f);
 	alignas(16) glm::vec4 light_point = glm::vec4(1.0f);
 };
 

@@ -172,6 +172,7 @@ int main(void) {
 		if (glfwGetKey(render->getWindow(), GLFW_KEY_D) == GLFW_PRESS) {
 			render->subo.camera_position += glm::vec4(0.01f, 0.0f, 0.0f, 0.0f);
 		}
+		render->subo.view = glm::lookAt(glm::vec3(render->subo.camera_position), glm::vec3(0.0f, 1.0f, 0.0f) + glm::vec3(render->subo.camera_position), glm::vec3(0.0f, 0.0f, 1.0f));
 	};
 	try {
 		renderObj.init();
