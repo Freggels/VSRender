@@ -1,6 +1,7 @@
 # VSRender
 A simple project of mine to learn about the vulkan api and 3d graphics in general
 
+![](https://raw.githubusercontent.com/SHGuy1/VSRender/master/screenshots/lights_upgradable.png "Lights are not working yet")
 ## Deps and Compilation
 ### Linux
 #### Dependedncies
