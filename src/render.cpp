@@ -21,20 +21,10 @@ void VRender::init() {
 	createSceneUniformBuffers();
 	createCommandBuffers();
 	createSyncObjects();
-	/*pushObject(test_object);
-	pushObject(test_object_2);
-	pushObject(test_object_3);*/
-
-	//createVertexBuffer();
-	//createIndexBuffer();
-	//createDescriptorSets();
 	recordCommandBuffers();
 }
 
 void VRender::startRender() {
-	/*pushObject(test_object);
-	pushObject(test_object_2);
-	pushObject(test_object_3);*/
 	while (!glfwWindowShouldClose(window)) {
 		renderFrame();
 		glfwPollEvents();
@@ -158,17 +148,9 @@ void VRender::createObjectDescriptorSets(Object3D &obj3d) {
 }
 
 void VRender::executeScripts() {
-	execute_script();
+	main_cam.execute_script(this);
 	for (auto &obj : objects) {
 		obj.execute_script(this);
-	}
-}
-
-
-
-void VRender::execute_script() {
-	if (script_function != nullptr) {
-		script_function(this);
 	}
 }
 
@@ -214,6 +196,7 @@ void VRender::recreateSwapChain() {
 
 void VRender::renderFrame() {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+	updateMouse();
 	executeScripts();
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(
@@ -453,10 +436,10 @@ void VRender::createIndexBuffer() {
 }
 
 void VRender::createSceneUniformBuffers() {
-	subo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 1.7f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
-	subo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
-	subo.proj[1][1] *= -1;
-	subo.light_point = light_point;
+	main_cam.subo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(0.0f, 1.7f, 1.5f), glm::vec3(0.0f, 0.0f, 1.0f));
+	main_cam.subo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 100.0f);
+	main_cam.subo.proj[1][1] *= -1;
+	main_cam.subo.light_point = light_point;
 	VkDeviceSize bufferSize = sizeof(Scene_UBO);
 	sceneUniformBuffers.resize(swapChainImages.size());
 	sceneUniformBuffersMemory.resize(swapChainImages.size());
@@ -519,46 +502,15 @@ void VRender::createBuffer(
 
 void VRender::updateUniformBuffer(uint32_t currentImage) {
 	void *data;
-	/*static auto startTime = std::chrono::high_resolution_clock::now();
-	auto currentTime = std::chrono::high_resolution_clock::now();
-	float time = std::chrono::duration<float, std::chrono::seconds::period>(
-		currentTime - startTime
-	).count();
-	for (auto &obj : objects) {
-		Object3D_UBO oubo = {};
-		oubo.position = obj.ubo.position;
-		oubo.model = glm::rotate(obj.ubo.model, time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		vkMapMemory(device, obj.ubufmem[currentImage], 0, sizeof(obj.ubo), 0, &data);
-		memcpy(data, &oubo, sizeof(obj.ubo));
-		vkUnmapMemory(device, obj.ubufmem[currentImage]);
-	}*/
 	for (auto &obj : objects) {
 		vkMapMemory(device, obj.ubufmem[currentImage], 0, sizeof(obj.ubo), 0, &data);
 		memcpy(data, &obj.ubo, sizeof(obj.ubo));
 		vkUnmapMemory(device, obj.ubufmem[currentImage]);
 	}
-	vkMapMemory(device, sceneUniformBuffersMemory[currentImage], 0, sizeof(subo), 0, &data);
-	memcpy(data, &subo, sizeof(subo));
+	vkMapMemory(device, sceneUniformBuffersMemory[currentImage], 0, sizeof(Scene_UBO), 0, &data);
+	memcpy(data, &main_cam.subo, sizeof(Scene_UBO));
 	vkUnmapMemory(device, sceneUniformBuffersMemory[currentImage]);
 }
-
-/*void VRender::createDescriptorPool() {
-	std::array<VkDescriptorPoolSize, 3> poolSizes = {};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size() * 2);
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size() * 2);
-	poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[2].descriptorCount = static_cast<uint32_t>(swapChainImages.size() * 2);
-	VkDescriptorPoolCreateInfo poolInfo = {};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size() * 2);
-	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create descriptor pool!");
-	}
-}*/
 
 void VRender::createCommandBuffers() {
 	commandBuffers.resize(swapChainFramebuffers.size());
@@ -1301,6 +1253,22 @@ void VRender::prepareWindow() {
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 	glfwSetKeyCallback(window, keyInputCallback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	/*if (glfwRawMouseMotionSupported()) {
+		std::cout << "Raw mouse input supported!" << std::endl;
+	}*/
+}
+
+void VRender::updateMouse() {
+	double mxPos, myPos;
+	glfwGetCursorPos(window, &mxPos, &myPos);
+	mouseMovement = glm::vec2(mxPos, myPos) - oldMousePos;
+	oldMousePos = glm::vec2(mxPos, myPos);
+	//oldMousePos
+}
+
+glm::vec2 VRender::getMouseMovement() {
+	return mouseMovement;
 }
 
 void VRender::framebufferResizedSet(bool new_state) {

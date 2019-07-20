@@ -4,14 +4,14 @@
 Object3D test_object_1 = {
 	"cube:0",
 	{
-		{{ -0.5f, -0.5f,  -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-		{{  0.5f, -0.5f,  -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-		{{  0.5f,  0.5f,  -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-		{{ -0.5f,  0.5f,  -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-		{{ -0.5f, -0.5f,   0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-		{{  0.5f, -0.5f,   0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-		{{  0.5f,  0.5f,   0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
-		{{ -0.5f,  0.5f,   0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}
+		{{ -0.5f, -0.5f,  -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {-1.0f, -1.0f, -1.0f}},
+		{{  0.5f, -0.5f,  -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, { 1.0f, -1.0f, -1.0f}},
+		{{  0.5f,  0.5f,  -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f}},
+		{{ -0.5f,  0.5f,  -0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f,  1.0f, -1.0f}},
+		{{ -0.5f, -0.5f,   0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, -1.0f,  1.0f}},
+		{{  0.5f, -0.5f,   0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f}},
+		{{  0.5f,  0.5f,   0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, { 1.0f,  1.0f,  1.0f}},
+		{{ -0.5f,  0.5f,   0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, {-1.0f,  1.0f,  1.0f}}
 	},
 	{
 		0, 1, 2, 2, 3, 0,
@@ -159,27 +159,56 @@ int main(void) {
 	};
 	/*plane_1.script_function = script_function;
 	plane_2.script_function = script_function;*/
-	renderObj.script_function = [](VRender *render) {
+	renderObj.main_cam.script_function = [](VRender *render, Camera3D *cam) {
+		glm::vec3 rawPos = glm::vec4(0.0f);
 		if (glfwGetKey(render->getWindow(), GLFW_KEY_W) == GLFW_PRESS) {
-			render->subo.camera_position += glm::vec4(0.0f, 0.01f, 0.0f, 0.0f);
+			rawPos = glm::vec3(0.0f, 0.01f, 0.0f);
 		}
 		if (glfwGetKey(render->getWindow(), GLFW_KEY_S) == GLFW_PRESS) {
-			render->subo.camera_position += glm::vec4(0.0f, -0.01f, 0.0f, 0.0f);
+			rawPos = glm::vec3(0.0f, -0.01f, 0.0f);
 		}
 		if (glfwGetKey(render->getWindow(), GLFW_KEY_A) == GLFW_PRESS) {
-			render->subo.camera_position += glm::vec4(-0.01f, 0.0f, 0.0f, 0.0f);
+			rawPos = glm::vec3(-0.01f, 0.0f, 0.0f);
 		}
 		if (glfwGetKey(render->getWindow(), GLFW_KEY_D) == GLFW_PRESS) {
-			render->subo.camera_position += glm::vec4(0.01f, 0.0f, 0.0f, 0.0f);
+			rawPos = glm::vec3(0.01f, 0.0f, 0.0f);
 		}
-		render->subo.view = glm::lookAt(glm::vec3(render->subo.camera_position), glm::vec3(0.0f, 1.0f, 0.0f) + glm::vec3(render->subo.camera_position), glm::vec3(0.0f, 0.0f, 1.0f));
+		double mxPos, myPos;
+		glfwGetCursorPos(render->getWindow(), &mxPos, &myPos);
+		cam->mouseDtoLocalAngle(render->getMouseMovement());
+		float nX = std::sin(cam->angles.x);
+		float nY = std::cos(cam->angles.x) * std::sin(cam->angles.y);
+		float nZ = std::cos(cam->angles.y);
+		glm::vec3 newPos = rawPos
+			* glm::mat3(
+				glm::rotate(
+				glm::mat4(1.0f),
+				cam->angles.x,
+				glm::vec3(0.0f, 0.0f, 1.0f)
+			)
+		);
+		cam->camera_position += newPos;
+		#ifdef DEBUG
+		if (newPos.y != 0.0f || newPos.x != 0.0f || render->getMouseMovement() != glm::vec2(0.0f))
+			std::cout <<
+			"newPos(x,y): {" << newPos.x << ":" << newPos.y <<
+			//" } degreesX: " << cX << " -> " << cXR <<
+			//" , degreesY: " << cY << " -> " << cYR <<
+			"} ; nX & nY & nZ: "<< nX << " " << nY << " " << nZ <<
+			" , M_PI: " << M_PI
+		<< std::endl;
+		#endif
+		cam->subo.view = glm::lookAt(
+			cam->camera_position,
+			glm::vec3(nX, nY, nZ) + cam->camera_position,
+			glm::vec3(0.0f, 0.0f, 1.0f));
 	};
 	try {
 		renderObj.init();
 		renderObj.pushObject(floor_1);
-		/*renderObj.pushObject(test_object_1);
+		renderObj.pushObject(test_object_1);
 		renderObj.pushObject(test_object_2);
-		renderObj.pushObject(test_object_3);*/
+		renderObj.pushObject(test_object_3);
 		renderObj.startRender();
 		renderObj.destroy();
 	} catch (const std::exception& e) {

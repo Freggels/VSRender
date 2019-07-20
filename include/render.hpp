@@ -16,6 +16,7 @@
 #include <map>
 #include <chrono>
 #include <functional>
+#include <math.h>
 
 struct Vertex {
 	glm::vec3 pos;
@@ -58,7 +59,6 @@ struct Vertex {
 struct Scene_UBO {
 	alignas(16) glm::mat4 view = glm::mat4(1.0f);
 	alignas(16) glm::mat4 proj = glm::mat4(1.0f);
-	alignas(16) glm::vec4 camera_position = glm::vec4(0.0f, -4.0f, 1.5f, 0.0f);
 	alignas(16) glm::vec4 light_point = glm::vec4(1.0f);
 };
 
@@ -68,6 +68,53 @@ struct Object3D_UBO {
 };
 
 class VRender;
+
+struct Camera3D {
+		Scene_UBO subo = {};
+		glm::vec3 camera_position = glm::vec3(0.0f, 2.0f, 1.7f);
+		glm::vec2 angles = glm::vec2(0.0f, 1.570f);
+		glm::vec2 y_area = glm::vec2(1.1344f, 2.7925f);
+		int mouse_speed = 10;
+		std::function<void(VRender*,Camera3D*)> script_function = nullptr;
+
+		void mouseDtoLocalAngle(glm::vec2 moMove) {
+			float cX = 0.0f;
+			if (moMove.x < 0.0f) {
+				cX = -1.0f * std::fmod(((-moMove.x) / 100) * mouse_speed, 360.0f);
+				angles.x += static_cast<float>((cX) * M_PI / 180.0);
+			} else {
+				cX = std::fmod((moMove.x / 100) * mouse_speed, 360.0f);
+				angles.x += static_cast<float>((cX) * M_PI / 180.0);
+			}
+			float cY = 0.0f;
+			if (moMove.y < 0) {
+				if (y_area.x > angles.y) {
+					angles.y = y_area.x;
+				} else {
+					cY = -1.0f * std::fmod(((-moMove.y) / 100) * mouse_speed, 360.0f);
+					angles.y += static_cast<float>((cY) * M_PI / 180.0);
+				}
+			} else {
+				if (y_area.y < angles.y) {
+					angles.y = y_area.y;
+				} else {
+					cY = std::fmod((moMove.y / 100) * mouse_speed, 360.0f);
+					angles.y += static_cast<float>((cY) * M_PI / 180.0);
+				}
+			}
+			if (moMove != glm::vec2(0.0f)) {
+				std::cout << "moMove: {" << moMove.x << ":" << moMove.y << "} ";
+				std::cout << "; angles (x,y): {" << angles.x << ":"  << angles.y << "} ";
+				std::cout << "; currentDegrees (x,y): {" << cX << ":" << cY << "} " << std::endl;
+			}
+		}
+
+		void execute_script(VRender *render) {
+			if (script_function != nullptr) {
+				script_function(render, this);
+			}
+		}
+};
 
 struct Object3D {
 	std::string name;
@@ -100,8 +147,8 @@ class VRender {
 		void framebufferResizedSet(bool new_state);
 		void pushObject(Object3D obj3d);
 		GLFWwindow *getWindow();
-		Scene_UBO subo = {};
-		std::function<void(VRender*)> script_function = nullptr;
+		glm::vec2 getMouseMovement();
+		Camera3D main_cam = {};
 	private:
 		GLFWwindow* window;
 		VkInstance instance;
@@ -149,6 +196,8 @@ class VRender {
 		std::vector<Object3D> objects;
 		std::map<std::string, uint32_t> objectIDs;
 		glm::vec4 light_point = glm::vec4(0.0f, 0.0f, 2.0f, 0.0f);
+		glm::vec2 oldMousePos = glm::vec2(0.0f);
+		glm::vec2 mouseMovement = glm::vec2(0.0f);
 		// Init
 		void renderFrame();
 		void prepareWindow();
@@ -177,7 +226,6 @@ class VRender {
 		void createSyncObjects();
 		void recreateSwapChain();
 		void executeScripts();
-		void execute_script();
 		// Tools
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
@@ -219,6 +267,7 @@ class VRender {
 		void createObjectDescriptorSets(Object3D &obj3d);
 		void createObjectUniformBuffers(Object3D &obj3d);
 		void recreateDescriptorSets();
+		void updateMouse();
 };
 
 #endif

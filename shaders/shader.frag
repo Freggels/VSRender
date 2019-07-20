@@ -9,7 +9,6 @@ layout(location = 3) in vec3 vfPosition;
 layout(binding = 0) uniform SceneUBO {
 	mat4 view;
 	mat4 proj;
-	vec4 camera_position;
 	vec4 light_point;
 } subo;
 
